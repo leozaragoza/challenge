@@ -14,7 +14,7 @@ contract ETHPool is ReentrancyGuard {
 
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
-    uint256 public rewardsDuration = 60 seconds;
+    uint256 public rewardsDuration = 7 days;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
 
