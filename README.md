@@ -1,3 +1,5 @@
+[![build](https://github.com/leozaragoza/challenge/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/leozaragoza/challenge/actions/workflows/build.yml)
+
 # Smart Contract Challenge
 
 ## A) Challenge
