@@ -13,7 +13,7 @@ describe("ETHPool deposits", function () {
   beforeEach(async function () {
     ETHPool = await ethers.getContractFactory("ETHPool");
     [owner, alice, bob] = await ethers.getSigners();
-    ethPool = await ETHPool.connect(owner).deploy();
+    ethPool = await ETHPool.connect(owner).deploy(owner.address);
     await ethPool.deployed();
   });
 

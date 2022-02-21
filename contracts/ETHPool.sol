@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "./SafeMath.sol";
-import "./ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-// Contract Inspired in Synthetix.io staking rewards.
+// Contract based and inspired in Synthetix.io staking rewards.
 // https://docs.synthetix.io/contracts/source/contracts/stakingrewards
-contract ETHPool is ReentrancyGuard {
+contract ETHPool is ReentrancyGuard, AccessControl {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
@@ -25,10 +26,14 @@ contract ETHPool is ReentrancyGuard {
     mapping(address => uint256) private _balances;
 
     address private owner;
+    mapping(address => bool) teamMembers;
+
+    bytes32 public constant TEAM_ROLE = keccak256("TEAM_ROLE");
 
     /* ========== CONSTRUCTOR ========== */
-    constructor() {
-        owner = msg.sender;
+    constructor(address _admin) {
+        _setupRole(DEFAULT_ADMIN_ROLE, _admin);
+        _setupRole(TEAM_ROLE, _admin);
     }
 
     /* ========== VIEWS ========== */
@@ -89,13 +94,13 @@ contract ETHPool is ReentrancyGuard {
         }
     }
 
-    function exit() external payable {
+    function exit() external {
         withdraw(_balances[msg.sender]);
         getReward();
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
-    function notifyRewardAmount(uint256 reward) external onlyOwner updateReward(address(0)) {
+    function notifyRewardAmount(uint256 reward) external onlyRole(TEAM_ROLE) updateReward(address(0)) {
         if (block.timestamp >= periodFinish) {
             rewardRate = reward.div(rewardsDuration);
         } else {
@@ -116,7 +121,7 @@ contract ETHPool is ReentrancyGuard {
         emit RewardAdded(reward);
     }
 
-    function setRewardsDuration(uint256 _rewardsDuration) external onlyOwner {
+    function setRewardsDuration(uint256 _rewardsDuration) external onlyRole(TEAM_ROLE) {
         require(
             block.timestamp > periodFinish,
             "Previous rewards period must be complete before changing the duration for the new period"
@@ -125,7 +130,7 @@ contract ETHPool is ReentrancyGuard {
         emit RewardsDurationUpdated(rewardsDuration);
     }
 
-    function depositRewards() onlyOwner external payable {
+    function depositRewards() external onlyRole(TEAM_ROLE) payable {
         require(msg.value > 0, "The deposited value is zero");
         _totalSupply += msg.value; 
         emit RewardsDeposited(msg.value);
@@ -140,11 +145,6 @@ contract ETHPool is ReentrancyGuard {
             rewards[account] = earned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only allowed by owner");
         _;
     }
 
